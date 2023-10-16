@@ -41,14 +41,16 @@ export default class UserConcept {
     locationRange: number,
   ) {
     await this.canCreate(username, password);
+    console.log("I'm here");
     const _id = await this.users.createOne({ username, password });
     const _pref = await this.userPreferences.createOne({ username, genderPref, sportsPref, skillPref, locationRange });
     const _prof = await this.userProfiles.createOne({ username, gender, sports, skill, location });
+    console.log("HI", _prof);
     return {
       msg: "User created successfully!",
       user: await this.users.readOne({ _id }),
-      profile: await this.userProfiles.readOne({ _prof }),
-      preference: await this.userPreferences.readOne({ _pref }),
+      profile: await this.userProfiles.readOne({ _id: _prof }),
+      preference: await this.userPreferences.readOne({ _id: _pref }),
     };
   }
 

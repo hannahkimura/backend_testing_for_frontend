@@ -1,5 +1,4 @@
 import { ObjectId } from "mongodb";
-
 import { Friend, Post, SkillScore, User, WebSession } from "./app";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc, UserPrefDoc } from "./concepts/user";
@@ -45,7 +44,9 @@ class Routes {
     if (userId) {
       await SkillScore.createScore(userId, 0);
     }
-    return { user: { username, password }, profile: Responses.profile(finished.profile), preferences: Responses.preferences(finished.preference) };
+    console.log("FINISHED", finished, finished.profile);
+    const profile = await Responses.profile(finished.profile);
+    return { user: { username, password }, profile: profile, preferences: await Responses.preferences(finished.preference) };
   }
 
   @Router.patch("/users/:_id")
@@ -230,13 +231,13 @@ class Routes {
     return await Friend.removeFriend(user, friendId);
   }
 
-  @Router.get("/connect/requests")
+  @Router.get("/friend/requests")
   async getRequests(session: WebSessionDoc) {
     const user = WebSession.getUser(session);
     return await Responses.friendRequests(await Friend.getRequests(user));
   }
 
-  @Router.post("/connect/requests/:to")
+  @Router.post("/friend/requests/:to")
   async sendFriendRequest(session: WebSessionDoc, to: string) {
     const user = WebSession.getUser(session);
     const toId = (await User.getUserByUsername(to))._id;
@@ -250,14 +251,14 @@ class Routes {
     return await Friend.removeRequest(user, toId);
   }
 
-  @Router.put("/connect/accept/:from")
+  @Router.put("/friend/accept/:from")
   async acceptFriendRequest(session: WebSessionDoc, from: string) {
     const user = WebSession.getUser(session);
     const fromId = (await User.getUserByUsername(from))._id;
     return await Friend.acceptRequest(fromId, user);
   }
 
-  @Router.put("/connect/reject/:from")
+  @Router.put("/friend/reject/:from")
   async rejectFriendRequest(session: WebSessionDoc, from: string) {
     const user = WebSession.getUser(session);
     const fromId = (await User.getUserByUsername(from))._id;
