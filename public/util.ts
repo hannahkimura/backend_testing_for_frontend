@@ -21,7 +21,18 @@ const operations: operation[] = [
     name: "Create User",
     endpoint: "/api/users",
     method: "POST",
-    fields: { username: "input", password: "input" },
+    fields: {
+      username: "input",
+      password: "input",
+      gender: "input",
+      sports: "input",
+      skill: "input",
+      location: "input",
+      genderPref: "input",
+      sportsPref: "input",
+      skillPref: "input",
+      locationRange: "input",
+    },
   },
   {
     name: "Login",
@@ -39,8 +50,22 @@ const operations: operation[] = [
     name: "Update User",
     endpoint: "/api/users",
     method: "PATCH",
-    fields: { update: { username: "input", password: "input" } },
+    fields: {
+      update: {
+        username: "input",
+        password: "input",
+        gender: "input",
+        sports: "input",
+        skill: "input",
+        location: "input",
+        genderPref: "input",
+        sportsPref: "input",
+        skillPref: "input",
+        locationRange: "input",
+      },
+    },
   },
+
   {
     name: "Delete User",
     endpoint: "/api/users",
@@ -63,18 +88,25 @@ const operations: operation[] = [
     name: "Create Post",
     endpoint: "/api/posts",
     method: "POST",
-    fields: { content: "input" },
+    fields: { content: "input", image: "input", collaborator: "input" },
   },
   {
     name: "Update Post",
     endpoint: "/api/posts/:id",
     method: "PATCH",
-    fields: { id: "input", update: { content: "input", options: { backgroundColor: "input" } } },
+    fields: { id: "input", update: { content: "input", options: { backgroundColor: "input" }, image: "input", visibility: "input" } },
   },
   {
     name: "Delete Post",
     endpoint: "/api/posts/:id",
     method: "DELETE",
+    fields: { id: "input" },
+  },
+
+  {
+    name: "Filter Users by Preferences",
+    endpoint: "/api/users/:id",
+    method: "POST",
     fields: { id: "input" },
   },
 ];
@@ -147,7 +179,7 @@ function getHtmlOperations() {
 function prefixedRecordIntoObject(record: Record<string, string>) {
   const obj: any = {}; // eslint-disable-line
   for (const [key, value] of Object.entries(record)) {
-    if (value === undefined || value === null || value === "") {
+    if (!value) {
       continue;
     }
     const keys = key.split(".");

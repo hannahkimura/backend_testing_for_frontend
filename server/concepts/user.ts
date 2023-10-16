@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import { Filter, ObjectId } from "mongodb";
 import DocCollection, { BaseDoc } from "../framework/doc";
 import { BadValuesError, NotAllowedError, NotFoundError } from "./errors";
 
@@ -7,13 +7,79 @@ export interface UserDoc extends BaseDoc {
   password: string;
 }
 
+export interface UserProfileDoc extends BaseDoc {
+  gender: string;
+  sports: Map<string, boolean>;
+  skill: number;
+  location: string;
+  username: string;
+}
+
+export interface UserPrefDoc extends BaseDoc {
+  username: string;
+  genderPref: string;
+  sportsPref: Map<string, boolean>;
+  skillPref: Array<number>;
+  locationRange: number;
+}
+
 export default class UserConcept {
   public readonly users = new DocCollection<UserDoc>("users");
+  public readonly userPreferences = new DocCollection<UserPrefDoc>("userPreferences");
+  public readonly userProfiles = new DocCollection<UserProfileDoc>("userProfiles");
 
-  async create(username: string, password: string) {
+  async create(
+    username: string,
+    password: string,
+    gender: string,
+    sports: Map<string, boolean>,
+    skill: number,
+    location: string,
+    genderPref: string,
+    sportsPref: Map<string, boolean>,
+    skillPref: Array<number>,
+    locationRange: number,
+  ) {
     await this.canCreate(username, password);
     const _id = await this.users.createOne({ username, password });
-    return { msg: "User created successfully!", user: await this.users.readOne({ _id }) };
+    const _pref = await this.userPreferences.createOne({ username, genderPref, sportsPref, skillPref, locationRange });
+    const _prof = await this.userProfiles.createOne({ username, gender, sports, skill, location });
+    return {
+      msg: "User created successfully!",
+      user: await this.users.readOne({ _id }),
+      profile: await this.userProfiles.readOne({ _prof }),
+      preference: await this.userPreferences.readOne({ _pref }),
+    };
+  }
+
+  async getUserPreferencesByUsername(user: ObjectId) {
+    const preferences = await this.userPreferences.readOne({ user });
+    if (preferences === null) {
+      throw new NotFoundError(`User preferences not found!`);
+    }
+    return preferences;
+  }
+
+  async updatePreferences(_id: ObjectId, update: Partial<UserPrefDoc>) {
+    if (update.username !== undefined) {
+      await this.isUsernameUnique(update.username);
+    }
+    await this.userPreferences.updateOne({ _id }, update);
+  }
+
+  async getUserProfileByUsername(user: ObjectId) {
+    const profile = await this.userProfiles.readOne({ user });
+    if (profile === null) {
+      throw new NotFoundError(`User profile not found!`);
+    }
+    return profile;
+  }
+
+  async updateProfile(_id: ObjectId, update: Partial<UserProfileDoc>) {
+    if (update.username !== undefined) {
+      await this.isUsernameUnique(update.username);
+    }
+    await this.userProfiles.updateOne({ _id }, update);
   }
 
   private sanitizeUser(user: UserDoc) {
@@ -51,6 +117,13 @@ export default class UserConcept {
     const filter = username ? { username } : {};
     const users = (await this.users.readMany(filter)).map(this.sanitizeUser);
     return users;
+  }
+
+  async filterUsers(query: Filter<UserProfileDoc>) {
+    const usersFiltered = this.userProfiles.readMany(query, {
+      sort: { dateUpdated: -1 },
+    });
+    return usersFiltered;
   }
 
   async authenticate(username: string, password: string) {

@@ -81,7 +81,7 @@ export default class FriendConcept {
     return request;
   }
 
-  private async isNotFriends(u1: ObjectId, u2: ObjectId) {
+  async isNotFriends(u1: ObjectId, u2: ObjectId) {
     const friendship = await this.friends.readOne({
       $or: [
         { user1: u1, user2: u2 },

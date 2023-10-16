@@ -1,8 +1,8 @@
 import { User } from "./app";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
+import { UserPrefDoc, UserProfileDoc } from "./concepts/user";
 import { Router } from "./framework/router";
-
 /**
  * This class does useful conversions for the frontend.
  * For example, it converts a {@link PostDoc} into a more readable format for the frontend.
@@ -17,6 +17,28 @@ export default class Responses {
     }
     const author = await User.getUserById(post.author);
     return { ...post, author: author.username };
+  }
+
+  static async profile(profile: UserProfileDoc | null) {
+    if (!profile) {
+      return profile;
+    }
+    const gender = profile.gender;
+    const location = profile.location;
+    const sports = profile.sports;
+    const skill = profile.skill;
+    return { gender, location, sports, skill };
+  }
+
+  static async preferences(pref: UserPrefDoc | null) {
+    if (!pref) {
+      return pref;
+    }
+    const gender = pref.genderPref;
+    const location = pref.locationRange;
+    const sports = pref.sportsPref;
+    const skill = pref.skillPref;
+    return { gender, location, sports, skill };
   }
 
   /**

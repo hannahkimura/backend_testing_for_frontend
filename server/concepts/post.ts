@@ -9,15 +9,19 @@ export interface PostOptions {
 
 export interface PostDoc extends BaseDoc {
   author: ObjectId;
-  content: string;
+  content: string; //use an image url
+  image?: string;
   options?: PostOptions;
+  visibility: "public" | "friends" | "private";
+  collaborator?: string; //if you want to collaborate with another user
 }
+//maybe have three different posts
 
 export default class PostConcept {
   public readonly posts = new DocCollection<PostDoc>("posts");
 
-  async create(author: ObjectId, content: string, options?: PostOptions) {
-    const _id = await this.posts.createOne({ author, content, options });
+  async create(author: ObjectId, content: string, image?: string, options?: PostOptions, collaborator?: string) {
+    const _id = await this.posts.createOne({ author, content, image, options, collaborator });
     return { msg: "Post successfully created!", post: await this.posts.readOne({ _id }) };
   }
 
@@ -53,9 +57,13 @@ export default class PostConcept {
     }
   }
 
+  async getPostById(_id: ObjectId) {
+    return await this.posts.readOne({ _id });
+  }
+
   private sanitizeUpdate(update: Partial<PostDoc>) {
     // Make sure the update cannot change the author.
-    const allowedUpdates = ["content", "options"];
+    const allowedUpdates = ["content", "options", "image", "visibility"];
     for (const key in update) {
       if (!allowedUpdates.includes(key)) {
         throw new NotAllowedError(`Cannot update '${key}' field!`);
